@@ -78,8 +78,8 @@ define("COOKIE_PATH", "/");  //Avaible in whole domain
  * sends to users, and whether to send a
  * welcome email to newly registered users.
  */
-define("EMAIL_FROM_NAME", "Dave Areno");
-define("EMAIL_FROM_ADDR", "areno5@embarqmail.com");
+define("EMAIL_FROM_NAME", "<Enter Administrator Name>");
+define("EMAIL_FROM_ADDR", "<Enter Administrator Email>");
 define("EMAIL_WELCOME", false);
 
 /**

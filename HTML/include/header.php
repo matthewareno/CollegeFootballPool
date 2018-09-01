@@ -9,7 +9,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<title>Areno Family Football</title>
+	<title>NCAA Football Pool</title>
 	<link href="css/main.css" rel="stylesheet" type="text/css" media="screen, print" />
 <?php
 	if(!empty($_SESSION['user']))
@@ -51,7 +51,7 @@
 							<img src=images/ncaa-football-logo.jpg alt=" " height="50" width="50">
 						</td>
 						<td align="center">
-							<h1 class="title">Areno Family NCAA Football Pool</h1>
+							<h1 class="title">NCAA Football Pool</h1>
 						</td>
 						<td width="50">
 							<img src=images/ncaa-football-logo.jpg alt=" " height="50" width="50">
