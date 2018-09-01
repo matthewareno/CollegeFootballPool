@@ -1,0 +1,71 @@
+<?php require('include/header.php'); ?>
+
+<?php 
+
+    // First we execute our common code to connection to the database and start the session 
+    require("include/session_common.php"); 
+     
+    // At the top of the page we check to see whether the user is logged in or not 
+    if(empty($_SESSION['user'])) 
+    { 
+        // If they are not, we redirect them to the login page. 
+        header("Location: login.html"); 
+         
+        // Remember that this die statement is absolutely critical.  Without it, 
+        // people can view your members-only content without logging in. 
+        die("Redirecting to login.html"); 
+    } 
+    
+    // Everything below this point in the file is secured by the login system 
+     
+    // We can display the user's username to them by reading it from the session array.  Remember that because 
+    // a username is user submitted content we must use htmlentities on it before displaying it to the user. 
+
+	$username = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8');
+	$firstName = get_user_first_name_by_username( $username )[0];
+	if( $firstName != NULL )
+	{
+		echo 'Hello ' . $firstName['firstName'] . '!<br />';
+	}
+	else
+	{
+		echo 'Hello '. $username . '!<br />';
+	}
+?> 
+<br />
+
+<b>NEW FEATURES!!!!</b><br />
+Sorry about the delay, but in case you didn't notice over the last couple of days, the 'Standings' page has been updated to 
+reflect all the challenges that Dave sets up.  Also, after you have entered your picks, you should see a button appear on the
+'Picks' page just before it lists all your picks that says 'Compare'.  This will allow you to look at who you're up against
+and how your picks varied.  Hopefully the comparison page isn't too difficult to understand, but if so, just shoot me an email
+and I'll explain how it works.
+<br /><br />
+Also, all Pick and Standing webpages have been updated so that you can print them.  Just make sure that you have 'Print background
+images' selected when you try to print the page.  This is an option that you should see after clicking 'File->Print' or hitting the
+printer icon on your browser.  Every browser and operating system represents it differently, so it's impossible to tell you 
+exactly what the option says for your computer, but it should include the world "background" and "print".  Again, if you have 
+questions, shoot me an email and I'll see if I can figure out what the option is that you need.
+
+<br /><br />
+<b>Help Me Videos</b><br />
+Just to help out anyone who feels a little hesitant with our new website, I put together a short, 15-minute overview of the website 
+to show what it provides and where to find anything for which you might be looking.  I also mention a few of the things I am still 
+planning on adding to the website in the coming weeks, as well as Dave's new "battle strategy" for this year.
+<br /><br />
+There are three copies of the video available (Low resolution/Medium resolution/High resolution).  They all contain the exact same 
+content, but are just different sizes.  What that means is that if you do not have a good internet connection, you will likely want to
+just watch the Low resolution version, though it might be a bit fuzzy.  The others will be less fuzzy, but might take longer to 
+download.  Feel free to try and see which on works best for you.
+<br /><br />
+<a href="Website_Overview_LowRes.mov">Low Resolution Tour</a><br />
+<a href="Website_Overview_MidRes.mov">Medium Resolution Tour</a><br />
+<a href="Website_Overview.mov">High Resolution Tour</a><br />
+<br />
+As normal, here are the rest of the standard links.
+<br /><br />
+<a href="index.html">Home</a><br />
+<a href="edit_account.html">Edit Account</a><br /> 
+<a href="logout.html">Logout</a>
+
+<?php require('include/footer.php'); ?>

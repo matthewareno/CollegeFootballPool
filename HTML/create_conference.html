@@ -1,0 +1,60 @@
+<?php
+	require('include/header.php');
+
+	if( empty($_SESSION['user'] ) )
+	{
+		header( "Location: login.html" );
+		die( "Redirecting to login.html" );
+	}
+
+	$user = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+	if( is_user_an_admin( $user ) == false )
+	{
+		header( "Location: index.html" );
+		die( "Redirecting to index.html" );
+	}
+
+
+	if( $_SERVER["REQUEST_METHOD"] == "POST" )
+	{
+		if(isset( $_POST['delete_button'] ) )
+		{
+			$conference = $_POST['conferences'];
+			remove_conference( $conference );
+		}
+		elseif( isset( $_POST['add_button'] ) )
+		{
+			add_new_conference( $_POST['conference_name'] );
+		}
+	}
+?>
+
+<p>Current Available User Conferences:</p>
+<table>
+	<tr>
+		<form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+			<td>
+				<select name="conferences" size="6">
+				<?php
+					$conferences = get_all_conferences();
+
+					foreach( $conferences as $conference ) {
+						echo '<option value="' . $conference[0] . '">' . $conference[0] . '</option>';
+					}
+				?>
+				</select>
+			</td>
+			<td>
+			<input type="submit" name="delete_button" value="Delete"></input>
+			</td>
+		</form>
+	</tr>
+</table>
+<br>
+<form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+Add Conference: <input type="text" name="conference_name" size="40" maxlength="50"></input><input type="submit" name="add_button" value="Add"></input>
+</form>
+			
+<?php
+	require('include/footer.php');
+?>

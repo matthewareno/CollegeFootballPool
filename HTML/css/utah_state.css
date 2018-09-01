@@ -1,0 +1,73 @@
+body {
+	background: #000 url(../images/utah_state_background.jpg) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #111F29;
+	color: #A3A39B;
+}
+
+.footer {
+	background: #111F29;
+	color: #A3A39B;
+}
+
+.menu ul{
+	background: #111F29;
+	color: #A3A39B;
+}
+
+.menu li a{
+	color:#A3A39B;
+}
+
+.menu li a:hover{
+	background: #A3A39B;
+	color: #111F29;
+}
+
+.menu ul li:hover a{
+	background:#A3A39B;
+	color:#111F29;
+}
+
+.menu li ul{
+	color: #A3A39B;
+}
+
+.menu li:hover ul{
+	color: #A3A39B;
+}
+
+.menu li li {
+	background:#111F29;
+	color: #A3A39B;
+}
+
+.menu li:hover li a{
+	background: #111F29;
+	color: #A3A39B;
+}
+
+.menu li ul a{
+	color: #A3A398;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #A3A39B;
+	color: #111F29;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #111F29;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #A3A39B;
+}
+

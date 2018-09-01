@@ -1,0 +1,189 @@
+<?php 
+	require( 'include/header.php' );
+	require_once('include/football_common.php');
+	require_once('include/database_games.php');
+	require_once('include/database_teams.php');
+	require_once('include/database_rankings.php');
+?>
+
+<?php
+function display_pick_group( $picks, $title, $player1, $player2 )
+{
+?>
+	<fieldset>
+	<legend><?php echo $title;?></legend>
+	<table border="1" align="center">
+		<tr class="tableHeader" align="center">
+			<td width="10" />
+			<td width="10" />
+			<td width="25" />
+			<td width="250">Visiting Team</td>
+			<td width="10" />
+			<td width="25" />
+			<td width="250">Home Team</td>
+			<td width="10" />
+			<td width="10" />
+		</tr>
+<?php
+    	foreach( $picks as $pick )
+    	{
+			$visitorColor = 'tableEntryUnpicked';
+			$homeColor = 'tableEntryUnpicked';
+			$vp1Color = 'tableEntryUnpicked';
+			$vp2Color = 'tableEntryUnpicked';
+			$hp1Color = 'tableEntryUnpicked';
+			$hp2Color = 'tableEntryUnpicked';
+        
+			$winner = get_pick_winner( $pick['gameId'] )[0];
+        	$gameInfo = get_game_by_id( $pick['gameId'] )[0];
+        	$visitorName = get_team_name_by_id( $gameInfo['VisitorID'] )[0];
+        	$homeName = get_team_name_by_id( $gameInfo['HomeID'] )[0];
+        	$visitorRank = get_team_rank_by_week( $gameInfo['VisitorID'], $gameInfo['GameWeek'] );
+			if( count( $visitorRank ) == 0 )
+				$visitorRank = 0;
+			else
+				$visitorRank = $visitorRank[0]['rank'];
+        	$homeRank = get_team_rank_by_week( $gameInfo['HomeID'], $gameInfo['GameWeek'] );
+			if( count( $homeRank ) == 0 )
+				$homeRank = 0;
+			else
+				$homeRank = $homeRank[0]['rank'];
+			$visitorIconURL = get_team_icon_url_by_id( $gameInfo['VisitorID'] )[0];
+			$homeIconURL = get_team_icon_url_by_id( $gameInfo['HomeID'] )[0];
+			$player1Pick = get_user_pick_by_game( $player1, $pick['gameId'] );
+			if( count( $player1Pick ) == 0 )
+				$player1Pick = 0;
+			else
+				$player1Pick = $player1Pick[0]['winner'];
+			$player2Pick = get_user_pick_by_game( $player2, $pick['gameId'] );
+			if( count( $player2Pick ) == 0 )
+				$player2Pick = 0;
+			else
+				$player2Pick = $player2Pick[0]['winner'];
+			$gameType = get_pick_type_by_id( $pick['gameId'] )[0];
+        	// Check and see if a winner has been declared yet
+        	if( $player1Pick == $gameInfo['VisitorID'] )
+			{
+				$vp1Color = 'tableCompPlayer1';
+			}
+			elseif( $player1Pick == $gameInfo['HomeID'] )
+			{
+				$hp1Color = 'tableCompPlayer1';
+			}
+			if( $player2Pick == $gameInfo['VisitorID'] )
+			{
+				$vp2Color = 'tableCompPlayer2';
+			}
+			elseif( $player2Pick == $gameInfo['HomeID'] )
+			{
+				$hp2Color = 'tableCompPlayer2';
+			}
+			
+			if( $winner['winner'] != 0 )
+			{
+				if( $winner['winner'] == $gameInfo['VisitorID'] )
+					$visitorColor = 'tableEntryWinner';
+				else
+					$homeColor = 'tableEntryWinner';
+			}
+        
+			if( $visitorRank == 0 )
+    	       	$visitorFullName = $visitorName['FullName'];
+    	    else
+				$visitorFullName = '#' . $visitorRank . ' ' . $visitorName['FullName'];
+			if( $homeRank == 0 )
+    	        $homeFullName = $homeName['FullName'];
+    	    else
+				$homeFullName = '#' . $homeRank . ' ' . $homeName['FullName'];
+
+			if( $player1Pick != $player2Pick )
+				echo '<tr align="center" >' . "\n";
+			else
+				echo '<tr align="center">' . "\n";
+			echo '<td class="' . $vp1Color . '" width="10" />' . "\n";
+			echo '<td class="' . $vp2Color . '" width="10" />' . "\n";
+			echo '<td><img src="' . $visitorIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>' . "\n";
+			echo '<td class="' . $visitorColor . '" width="250"><b>' . $visitorFullName . '</b></td>' . "\n";
+        	echo '<td width="10">@</td>' . "\n";
+			echo '<td><img src="' . $homeIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>' . "\n";
+			echo '<td class="' . $homeColor . '" width="250"><b>' . $homeFullName . '</b></td>' . "\n";
+			echo '<td class="' . $hp1Color . '" width="10" />' . "\n";
+			echo '<td class="' . $hp2Color . '" width="10" />' . "\n";
+        	echo '</tr>' . "\n";
+    	}
+	echo '</table>'."\n".'</fieldset>'."\n".'<br /><br />'."\n";
+}
+	
+	if( empty( $_SESSION['user'] ) )
+	{
+		header( "Location: login.html" );
+		die( "Redirecting to login.html" );
+	}
+
+	if( array_key_exists( 'gameWeek', $_GET ) )
+		$gameWeek = $_GET['gameWeek'];
+	elseif( array_key_exists( 'gameWeek', $_POST ) )
+		$gameWeek = $_POST['gameWeek'];
+	else 
+		$gameWeek = 1;
+	
+	if( array_key_exists( 'player1', $_GET ) )
+		$player1 = $_GET['player1'];
+	elseif( array_key_exists( 'player1', $_POST ) )
+		$player1 = $_POST['player1'];
+	else
+		$player1 = 1;
+
+	if( array_key_exists( 'player2', $_GET ) )
+		$player2 = $_GET['player2'];
+	elseif( array_key_exists( 'player2', $_POST ) )
+		$player2 = $_POST['player2'];
+	else
+		$player2 = 4;
+
+	if( $gameWeek == 0 || $player1 == -1 || $player2 == -1 )
+	{
+		echo 'Invalid user or gameWeek provided.<br />';
+	}
+	else
+	{
+		$standardGames = get_all_picks_by_week_and_type( $gameWeek, 'standard' );
+		$gotwGames = get_all_picks_by_week_and_type( $gameWeek, 'gotw' );
+		$upsetGames = get_all_picks_by_week_and_type( $gameWeek, 'upset' );
+		$weeklyPicks = get_all_picks_by_week( $gameWeek );
+		$player1Name = get_user_first_name_by_id( $player1 )[0];
+		$player2Name = get_user_first_name_by_id( $player2 )[0];
+		$player1Points = get_user_points_by_week( $player1, $gameWeek )[0];
+		$player2Points = get_user_points_by_week( $player2, $gameWeek )[0];
+?>
+		<fieldset>
+			<legend>Legend</legend>
+			<table align="center" border="1">
+				<tr style="background-color:#cccccc">
+					<td width="150">Player 1</td>
+					<td width="50">Points</td>
+					<td width="50">Color</td>
+					<td width="150">Player 2</td>
+					<td width="50">Points</td>
+					<td width="50">Color</td>
+				</tr>
+				<tr>
+					<td width="150"><?php echo $player1Name['firstName'];?></td>
+					<td width="50"><?php echo $player1Points['points'];?></td>
+					<td width="50" style="background-color:#ff0000" />
+					<td width="150"><?php echo $player2Name['firstName'];?></td>
+					<td width="50"><?php echo $player2Points['points'];?></td>
+					<td width="50" style="background-color:#0000ff" />
+				</tr>
+			</table>
+		</fieldset>
+		<br />
+		<br />
+<?php
+		display_pick_group( $standardGames, 'Standard Games', $player1, $player2 );
+		display_pick_group( $gotwGames, 'Games of the Week', $player1, $player2 );
+		display_pick_group( $upsetGames, 'Upset Games', $player1, $player2 );
+	}
+
+require( 'include/footer.php' );
+?>

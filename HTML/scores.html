@@ -1,0 +1,101 @@
+<?php 
+	require('include/header.php');
+	require_once( 'include/football_common.php' );
+	require_once('include/database_common.php');
+	require_once('include/database_games.php');
+	require_once('include/database_teams.php');
+	require_once('include/common_formatting.php');
+
+//	error_reporting(E_ALL);
+//	ini_set('display_errors', 'on' );
+
+	$myURL = explode( "?", htmlspecialchars( $_SERVER["PHP_SELF"] ) )[0];
+	display_week_links( 'Score Week', $myURL );
+
+	if( array_key_exists( 'gameWeek', $_POST ) )
+	{
+		$gameWeek = $_POST["gameWeek"];
+	}
+	elseif( array_key_exists( 'gameWeek', $_GET ) )
+	{
+		$gameWeek = $_GET['gameWeek'];
+	}
+	else
+	{
+		$gameWeek = get_current_week();
+	}
+
+	$gameDivision = "";
+	if( array_key_exists( 'gameDivision', $_POST ) )
+	{
+		$gameDivision = $_POST['gameDivision'];
+	}
+	else
+	{
+		$gameDivision = "FBS";
+	}
+
+	if( $gameDivision == "FBS" )
+	{
+//		$games = get_all_fbs_games_by_week( $gameWeek );
+		$pickGames = get_all_pick_games_by_week( $gameWeek );
+		$nonPickGames = get_all_non_pick_games_by_week( $gameWeek );
+		$gameCount = 1;
+	}
+	else
+	{
+		$pickGames = [];
+		$nonPickGames = get_all_fcs_games_by_week( $gameWeek );
+		$gameCount = 1;
+	}
+
+	echo '<form method="post" action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">' . "\n";
+	echo "\t" . '<input type="hidden" name="gameWeek" value="' . $gameWeek . '"></input>' . "\n";
+	echo "\t" . '<select name="gameDivision" onchange="this.form.submit()">' . "\n";
+	echo "\t\t" . '<option value="">Select Division</option>' . "\n";
+	echo "\t\t" . '<option value="FBS" select="selected">FBS</option>' . "\n";
+	echo "\t\t" . '<option value="FCS">FCS</option>' . "\n";
+	echo "\t" . '</select>' . "\n";
+	echo '</form>' . "\n";
+	echo '<p><b>Pick Games from Week ' . $gameWeek . '</b></p>' . "\n";
+	echo '<table border="0">' . "\n";
+	foreach ( $pickGames as $game ) {
+		if( $gameCount % 2 == 1 ) {
+			echo '<tr>' . "\n" . '<td>' . "\n";
+			display_game_score( $game['P_Id'] );
+			echo '</td>' . "\n";
+		}
+		else {
+			echo '<td>' . "\n";
+			display_game_score( $game['P_Id'] );
+			echo '</td>' . "\n" . '</tr>' . "\n";
+		}
+		$gameCount = $gameCount + 1;
+	}
+	if( $gameCount % 2 == 1 )
+		echo '</tr>' . "\n";
+	echo '</table>' . "\n";
+	echo '<br /><br />';
+	echo '<p><b>Non-pick Games from Week ' . $gameWeek . '</b></p>' . "\n";
+	echo '<table border = "0">' . "\n";
+	$gameCount = 1;
+	foreach ( $nonPickGames as $game ) {
+		if( $gameCount % 2 == 1 ) {
+			echo '<tr>' . "\n" . '<td>' . "\n";
+			display_game_score( $game['P_Id'] );
+			echo '</td>' . "\n";
+		}
+		else {
+			echo '<td>' . "\n";
+			display_game_score( $game['P_Id'] );
+			echo '</td>' . "\n" . '</tr>' . "\n";
+		}
+		$gameCount = $gameCount + 1;
+	}
+	if( $gameCount % 2 == 1 )
+		echo '</tr>' . "\n";
+	echo '</table>' . "\n";
+	
+?>
+
+<?php require('include/footer.php'); ?>

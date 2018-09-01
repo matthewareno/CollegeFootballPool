@@ -1,0 +1,69 @@
+body {
+	background: #FFFFFF url(../images/clemson.gif) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #EA6A20;
+	color: #FFFFFF;
+}
+
+.footer {
+	background: #EA6A20;
+	color: #FFFFFF;
+}
+
+.menu ul{
+	background: #EA6A20;
+	color: #FFFFFF;
+}
+
+.menu li a{
+	color:#FFFFFF;
+}
+
+.menu li a:hover{
+	background: #FFFFFF;
+	color: #EA6A20;
+}
+
+.menu ul li:hover a{
+	background:#FFFFFF;
+	color:#EA6A20;
+}
+
+.menu li ul{
+	color: #FFFFFF;
+}
+
+.menu li:hover ul{
+	color: #FFFFFF;
+}
+
+.menu li li {
+	background:#EA6A20;
+	color: #FFFFFF;
+}
+
+.menu li:hover li a{
+	background: #EA6A20;
+	color: #FFFFFF;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #FFFFFF;
+	color: #EA6A20;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #EA6A20;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #FFFFFF;
+}
+

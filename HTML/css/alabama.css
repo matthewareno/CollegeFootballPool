@@ -1,0 +1,74 @@
+body {
+	background: #000 url(../images/alabama_background.jpg) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #990000;
+	color: #CCCCCC;
+}
+
+.footer {
+	background: #990000;
+	color: #CCCCCC;
+}
+
+.menu ul{
+background: #990000;
+color: #CCCCCC;
+}
+
+.menu li a{
+color:#CCCCCC;
+}
+
+.menu li a:hover{
+background: #CCCCCC;
+color: #990000;
+}
+
+.menu ul li:hover a{
+background:#CCCCCC;
+color:#990000;
+}
+
+.menu li ul{
+color: #CCCCCC;
+}
+
+.menu li:hover ul{
+color: #CCCCCC;
+}
+
+.menu li li {
+background:#990000;
+color: #CCCCCC;
+/*this is where the rounded corners for the dropdown disappears*/
+}
+
+.menu li:hover li a{
+background: #990000;
+color: #CCCCCC;
+}
+
+.menu li ul a{
+color: #CCCCCC;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+background: #CCCCCC;
+color: #990000;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+background: #990000;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+background: #CCCCCC;
+}
+

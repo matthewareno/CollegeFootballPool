@@ -1,0 +1,614 @@
+<?php 
+	require( 'include/header.php' );
+	require_once( 'include/football_common.php' );
+	require_once( 'include/database_common.php' );
+	require_once( 'include/database_games.php' );
+	require_once( 'include/database_teams.php' );
+	require_once( 'include/database_rankings.php' );
+	require_once( 'include/common_formatting.php' );
+
+//	error_reporting( E_ALL );
+//	ini_set( 'display_errorr', 'on' );
+
+function get_picks( $gameWeek, $gameType )
+{
+	$user = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+	if( is_user_an_admin( $user ) )
+		return get_all_picks_by_week_and_type( $gameWeek, $gameType );
+	else
+		return get_all_available_picks_by_week_and_type( $gameWeek, $gameType );
+}
+
+function get_all_picks( $gameWeek )
+{
+	$user = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+	if( is_user_an_admin( $user ) )
+		return get_all_picks_by_week( $gameWeek );
+	else
+		return get_all_available_picks_by_week( $gameWeek );
+}
+
+function get_unselected_picks( $picks, $selections )
+{
+	$unselected = array();
+	$found = false;
+
+	if( empty( $picks ) )
+		return $unselected;
+
+	foreach( $picks as $pick )
+	{
+		$found = false;
+		foreach( $selections as $selection )
+		{
+			if( $selection['gameId'] == $pick['gameId'] )
+				$found = true;
+		}
+		if( $found == false )
+			$unselected[] = $pick;
+	}
+	return $unselected;
+}
+
+function get_game_types_from_list( $games, $gameType )
+{
+	$result = array();
+	foreach( $games as $game )
+	{
+		$type = get_pick_type_by_id( $game['gameId'] )[0];
+		if( $type['type'] == $gameType )
+			$result[] = $game;
+	}
+	return $result;
+}	
+
+function display_pick_group( $picks, $title )
+{
+	$gameCount = 1;
+
+	echo '<h1>' . $title . '</h1>' . "\n";
+    echo '<table border="0">' . "\n";
+
+    foreach( $picks as $pick )
+    {
+		if( $gameCount % 2 == 1 )
+		{
+			echo '<tr>' . "\n" . '<td>' . "\n";
+			display_game_pick( $pick );
+			echo '</td>' . "\n";
+		}
+		else
+		{
+			echo '<td>' . "\n";
+			display_game_pick( $pick );
+			echo '</td>' . "\n" . '</tr>' . "\n";
+		}
+		$gameCount = $gameCount + 1;
+	}
+	if( $gameCount % 2 == 1 )
+		echo '</tr>' . "\n";
+
+	echo '</table>' . "\n";
+	echo '<br /><br />' . "\n";
+}
+
+function display_user_picks( $userId, $week )
+{
+    // This function should return gameId,winner for all matches
+    $userStandardPicks = get_user_picks_by_week_and_type( $userId, $week, 'standard' );
+    $userGotwPicks = get_user_picks_by_week_and_type( $userId, $week, 'gotw' );
+    $userUpsetPicks = get_user_picks_by_week_and_type( $userId, $week, 'upset' );
+  	$numStandardPicks = count( $userStandardPicks );
+	$numGotwPicks = count( $userGotwPicks );
+	$numUpsetPicks = count( $userUpsetPicks );
+	$pointTotal = get_user_points_by_week( $userId, $week );
+	if( count( $pointTotal ) != 0 )
+		$pointTotal = $pointTotal[0]['points'];
+	else
+		$pointTotal = 0;
+
+  	if( $numStandardPicks != 0 )
+    	display_pick_group( $userStandardPicks, 'Existing Standard Game Picks' );
+	if( $numGotwPicks != 0 )
+    	display_pick_group( $userGotwPicks, 'Existing Game of the Week Picks' );
+	if( $numUpsetPicks != 0 )
+    	display_pick_group( $userUpsetPicks, 'Existing Upset Game Pick' );
+
+	$picksCompleted = get_number_of_pick_games_completed( $week )[0];
+
+	if( $picksCompleted[0] == 0 )
+	{
+		if( $numStandardPicks != 0 || $numGotwPicks != 0 || $numUpsetPicks != 0 )
+		{
+			echo '<br /><br />' . "\n";
+			echo '<form method="POST" action="picks.html?gameWeek=' . $week . '">' . "\n";
+			echo '<input type="submit" name="edit_picks" value="Edit Picks"></input>' . "\n";
+			echo '</form>' . "\n";
+		}
+	}
+	else
+	{
+		echo '<table border="1">' . "\n";
+		echo '<tr>' . "\n";
+		echo '<td width="150">Point Total:</td>' . "\n";
+		echo '<td width="50">' . $pointTotal . '</td>' . "\n";
+		echo '</tr>' . "\n";
+		echo '</table>' . "\n";
+	}
+}
+
+	$userId = 0;
+	if( empty( $_SESSION['user'] ) )
+	{
+		header( "Location: login.html" );
+		die( "Redirecting to login.html" );
+	}
+
+	if( array_key_exists( 'gameWeek', $_POST ) )
+		$gameWeek = $_POST['gameWeek'];
+	elseif( array_key_exists( 'gameWeek', $_GET ) )
+		$gameWeek = $_GET['gameWeek'];
+	else 
+		$gameWeek = get_current_week();
+
+	$user = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+	if( is_user_an_admin( $user ) )
+	{
+		if( array_key_exists( 'selected_user', $_POST ) )
+		{
+			$user = get_user_username_by_id( $_POST['selected_user'] )[0]['username'];
+			display_user_select_menu( $_POST['selected_user'], htmlspecialchars( $_SERVER["PHP_SELF"] ), $gameWeek );
+		}
+		elseif( array_key_exists( 'userId', $_POST ) )
+		{
+			$user = get_user_username_by_id( $_POST['userId'] )[0]['username'];
+			display_user_select_menu( $_POST['userId'], htmlspecialchars( $_SERVER["PHP_SELF"] ), $gameWeek );
+		}
+		else
+		{
+			$userId = get_user_id_from_username( $user )[0]['id'];
+			display_user_select_menu( $userId, htmlspecialchars( $_SERVER["PHP_SELF"] ), $gameWeek );
+		}
+	}
+
+
+	if( $_SERVER["REQUEST_METHOD"] == "POST" && ( array_key_exists( 'submit_picks', $_POST ) || array_key_exists( 'resubmit_picks', $_POST ) ) )
+	{
+		if( array_key_exists( 'submit_picks', $_POST ) )
+		{
+			$userId = $_POST['userId'];
+//			$gameIds = get_all_available_picks_by_week( $_POST['gameWeek'] );
+			$gameIds = get_all_picks_by_week( $_POST['gameWeek'] );
+			$count = 0;
+
+			if( count( $gameIds ) == 0 )
+			{
+				echo '<p>No picks have been entered yet for this week.</p>';
+			}
+			else
+			{
+				foreach( $gameIds as $gameId )
+				{
+					$gameName = 'game_' . $gameId['gameId'];
+					$pick = 0;
+					if( array_key_exists( $gameName, $_POST ) )
+					{
+						if( $_POST[$gameName] == "visitor" )
+						{
+							$pick = get_game_away_team( $gameId['gameId'] )[0];
+							$chronology = get_game_chronology_by_id( $gameId['gameId'] )[0];
+							add_user_pick( $gameId['gameId'], $userId, $pick['VisitorID'], $_POST['gameWeek'], $chronology['Chronology']);
+							$count += 1;
+						}
+						else
+						{
+							$pick = get_game_home_team( $gameId['gameId'] )[0];
+							$chronology = get_game_chronology_by_id( $gameId['gameId'] )[0];
+							add_user_pick( $gameId['gameId'], $userId, $pick['HomeID'], $_POST['gameWeek'], $chronology['Chronology'] );
+							$count += 1;
+						}
+					}
+				}
+				if( array_key_exists( 'upset', $_POST ) )
+				{
+						$gameId = $_POST['upset'];
+						$pick = get_underdog_by_game( $gameId )[0];
+						$chronology = get_game_chronology_by_id( $gameId )[0];
+						add_user_pick( $gameId, $userId, $pick['underdog'], $_POST['gameWeek'], $chronology['Chronology'] );
+						$count += 1;
+				}
+
+				echo '<form action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">' . "\n";
+				echo '<p>Successfully submitted ' . $count . ' picks to pool.</p>' . "\n";
+				echo '<input type="submit" value="Back"></input>' . "\n";
+				echo '<input type="hidden" name="gameWeek" value="' . $_POST['gameWeek'] . '"></input>' . "\n";
+				echo '</form>' . "\n";
+			}
+		}
+		elseif( array_key_exists( 'resubmit_picks', $_POST ) )
+		{
+//			$userId = get_user_id_from_username( $_POST['userId'] )[0];
+			$userId = $_POST['userId'];
+			$gameIds = get_all_available_picks_by_week( $_POST['gameWeek'] );
+			$count = 0;
+
+			if( count( $gameIds ) == 0 )
+			{
+				echo '<p>No picks have been entered yet for this week.</p>' . "\n";
+			}
+			else
+			{
+				foreach( $gameIds as $gameId )
+				{
+					$gameName = 'game_' . $gameId['gameId'];
+					$pick = 0;
+					if( array_key_exists( $gameName, $_POST ) )
+					{
+						if( $_POST[$gameName] == "visitor" )
+						{
+							$pick = get_game_away_team( $gameId['gameId'] )[0];
+							update_user_pick( $gameId['gameId'], $userId, $pick['VisitorID'], $_POST['gameWeek'] );
+							$count += 1;
+						}
+						else
+						{
+							$pick = get_game_home_team( $gameId['gameId'] )[0];
+							update_user_pick( $gameId['gameId'], $userId, $pick['HomeID'], $_POST['gameWeek'] );
+							$count += 1;
+						}
+					}
+				}
+				if( array_key_exists( 'upset', $_POST ) )
+				{
+						$gameId = $_POST['upset'];
+						$priorPick = get_user_upset_pick_by_week( $userId, $_POST['gameWeek'] );
+						$pick = get_underdog_by_game( $gameId )[0];
+						$chronology = get_game_chronology_by_id( $gameId )[0];
+						if( $priorPick != false )
+						{
+							delete_user_pick( $userId, $priorPick );
+						}
+						add_user_pick( $gameId, $userId, $pick['underdog'], $_POST['gameWeek'], $chronology['Chronology'] );
+						$count += 1;
+				}
+				echo '<form action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">' . "\n";
+				echo '<p>Successfully updated picks.</p>' . "\n";
+				echo '<input type="submit" value="Back"></input>' . "\n";
+				echo '<input type="hidden" name="gameWeek" value="' . $_POST['gameWeek'] . '">' . "\n";
+				echo '</form>' . "\n";
+			}
+		}
+	}
+	else
+	{
+		$myURL = explode( "?", htmlspecialchars( $_SERVER["PHP_SELF"] ) )[0];
+		display_week_links( 'Pick Week', $myURL );
+		if( array_key_exists( 'userId', $_POST ) )
+			$userId = $_POST['userId'];
+		elseif( array_key_exists( 'selected_user', $_POST ) )
+			$userId = $_POST['selected_user'];
+		else
+		{
+			$temp = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+			$userId = get_user_id_from_username( $temp )[0]['id'];
+		}
+
+		echo '<p><b>Week ' . $gameWeek . '</b></p>';
+		$gameIds = get_all_picks( $gameWeek );
+//		$gameIds = get_all_available_picks_by_week( $gameWeek );
+
+		// First step is to determine if the user already has picks entered, or if they need to enter
+		// new picks for this week
+		$currPicks = get_user_picks_for_week( $userId, $gameWeek );
+		$editPicks = false;
+		if( count( $currPicks ) == 0 )
+		{
+			echo '<p>No picks have been entered yet for this week.</p>';
+		}
+
+		if( array_key_exists( 'edit_picks', $_POST ) )
+		{
+			$editPicks = true;
+			$standardGames = get_picks( $gameWeek, 'standard' );
+			$gotwGames = get_picks( $gameWeek, 'gotw' );
+			$upsetGames = get_picks( $gameWeek, 'upset' );
+		}
+		else
+		{
+			$allUsers = get_all_user_ids();
+			$unselectedPicks = get_unselected_picks( $gameIds, $currPicks );
+			$standardGames = get_game_types_from_list( $unselectedPicks, 'standard' );
+			$gotwGames = get_game_types_from_list( $unselectedPicks, 'gotw' );
+			$upsetGames = get_game_types_from_list( $unselectedPicks, 'upset' );
+			
+			if( ( count( $standardGames ) == 0 && count( $gotwGames ) == 0 ) || 
+				( $gameWeek == 17 && count( $standardGames ) == 0 && count( $gotwGames ) == 0 ) )
+			{
+				$weeklyChallenge = get_user_challenge_for_week( $userId, $gameWeek );
+				$challengerId = 0;
+				if( sizeof( $weeklyChallenge ) > 0 )
+				{
+					if( $weeklyChallenge[0]['challenger1'] == $userId )
+						$challengerId = $weeklyChallenge[0]['challenger2'];
+					else
+						$challengerId = $weeklyChallenge[0]['challenger1'];
+		
+					$challengersName = get_user_name_by_id( $challengerId )[0];
+					
+					echo 'This weeks challenger: ' . $challengersName['firstName'] . ' ' . $challengersName['lastName'] . '<br />' . "\n";
+					echo '<form method="POST" action="comparison.html">' . "\n";
+					echo '<input type="hidden" name="player1" value="' . $userId . '"></input>' . "\n";
+					echo '<input type="hidden" name="player2" value="' . $challengerId . '"</input>' . "\n";
+					echo '<input type="hidden" name="gameWeek" value="' . $gameWeek . '"></input>' . "\n";
+					echo '<input type="submit" name="comparison" value="Compare"></input>' . "\n";
+					echo '</form>' . "\n";
+				}
+			}
+			display_user_picks( $userId, $gameWeek );
+			echo '<br /><br />' . "\n";
+		}
+
+		echo '<form method="POST" action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">' . "\n";
+		echo '<input type="hidden" name="gameWeek" value="' . $gameWeek . '"></input>' . "\n";
+		echo '<input type="hidden" name="userId" value="' . $userId . '"></input>' . "\n";
+		if( count( $standardGames ) != 0 )
+		{
+			echo '<fieldset><legend>Standard Games</legend>';
+			foreach ( $standardGames as $gameId ) 
+			{
+				$game = get_game_by_id( $gameId['gameId'] );
+				if( $game != NULL )
+				{
+					$game = $game[0];
+					$visitorName = get_team_name_by_id( $game['VisitorID'] )[0];
+					$visitorURL = get_team_url_by_id( $game['VisitorID'] )[0];
+					$homeName = get_team_name_by_id( $game['HomeID'] )[0];
+					$homeURL = get_team_url_by_id( $game['HomeID'] )[0];
+					$visitorRecord = get_team_record_by_id( $game['VisitorID'] )[0];
+					$homeRecord = get_team_record_by_id( $game['HomeID'] )[0];
+					$visitorRank = get_team_rank_by_week( $game['VisitorID'], $game['GameWeek'] );
+					$neutral = $game['NeutralSite'];
+					$odds = $game['Odds'];
+					if( count( $visitorRank ) != 0 )
+						$visitorRank = $visitorRank[0]['rank'];
+					else
+						$visitorRank = 0;
+					$homeRank = get_team_rank_by_week( $game['HomeID'], $game['GameWeek'] );
+					if( count( $homeRank ) != 0 )
+						$homeRank = $homeRank[0]['rank'];
+					else
+						$homeRank = 0;
+					$visitorIconURL = get_team_icon_url_by_id( $game['VisitorID'] )[0];
+					$homeIconURL = get_team_icon_url_by_id( $game['HomeID'] )[0];
+					$visitorSelected = false;
+					$homeSelected = false;
+					if( $editPicks )
+					{
+						$userPick = get_user_pick_by_game( $userId, $gameId['gameId'] )[0];
+						if( $userPick['winner'] == $game['VisitorID'] )
+							$visitorSelected = true;
+						if( $userPick['winner'] == $game['HomeID'] )
+							$homeSelected = true;
+					}
+						
+					echo '<table border="1">';
+					echo '<tr class="tableRowClear">';
+					if( $visitorSelected )
+						echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="visitor" checked="checked"></input></td>';
+					else
+						echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="visitor"></input></td>';
+					echo '<td><img src="' . $visitorIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+					if( $visitorRank == 0 )
+						echo '<td width="250"><a href="' . $visitorURL['URL'] . '">' . $visitorName['FullName'] . '</a></td>';
+					else
+						echo '<td width="250"><a href="' . $visitorURL['URL'] . '">#' . $visitorRank . ' ' . $visitorName['FullName'] . '</a></td>';
+					echo '<td align="center">' . $visitorRecord[0] . '-' . $visitorRecord[1] . '-' . $visitorRecord[2] . '</td>';
+					echo '</tr>';
+					echo '<tr class="tableHeader">';
+					if( $homeSelected )
+						echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="home" checked="checked"></input></td>';
+					else
+						echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="home"></input></td>';
+					echo '<td><img src="' . $homeIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+					if( $homeRank == 0 )
+						echo '<td width="250"><a href="' . $homeURL['URL'] . '">' . $homeName['FullName'] . '</a></td>';
+					else
+						echo '<td width="250"><a href="' . $homeURL['URL'] . '">#' . $homeRank . ' ' . $homeName['FullName'] . '</a></td>';
+					echo '<td align="center">' . $homeRecord[0] . '-' . $homeRecord[1] . '-' . $homeRecord[2] . '</td>';
+					echo '</tr>';
+					if( !empty( $odds ) )
+					{
+						echo '<tr class="tableRowClear">';
+						echo '<td />';
+						echo '<td />';
+						echo '<td width="250" align="right">' . $odds . '</td>';
+						echo '<td />';
+						echo '</tr>';
+					}
+					echo '</table>';	
+					if( $neutral )
+						echo '* Played at neutral location';
+					echo '</p>';
+				}
+			}
+		}
+		if( count( $gotwGames ) != 0 )
+			{
+				echo '</fieldset><br>';
+				echo '<fieldset><legend>Games of the Week</legend>';
+				foreach ( $gotwGames as $gameId ) 
+				{
+					$game = get_game_by_id( $gameId['gameId'] );
+					if( $game != NULL )
+					{
+						$game = $game[0];
+						$visitorName = get_team_name_by_id( $game['VisitorID'] )[0];
+						$visitorURL = get_team_url_by_id( $game['VisitorID'] )[0];
+						$homeName = get_team_name_by_id( $game['HomeID'] )[0];
+						$homeURL = get_team_url_by_id( $game['HomeID'] )[0];
+						$visitorRecord = get_team_record_by_id( $game['VisitorID'] )[0];
+						$homeRecord = get_team_record_by_id( $game['HomeID'] )[0];
+						$visitorRank = get_team_rank_by_week( $game['VisitorID'], $game['GameWeek'] );
+						$neutral = $game['NeutralSite'];
+						$odds = $game['Odds'];
+						if( count( $visitorRank ) != 0 )
+							$visitorRank = $visitorRank[0]['rank'];
+						else
+							$visitorRank = 0;
+						$homeRank = get_team_rank_by_week( $game['HomeID'], $game['GameWeek'] );
+						if( count( $homeRank ) != 0 )
+							$homeRank = $homeRank[0]['rank'];
+						else
+							$homeRank = 0;
+						$visitorIconURL = get_team_icon_url_by_id( $game['VisitorID'] )[0];
+						$homeIconURL = get_team_icon_url_by_id( $game['HomeID'] )[0];
+						$visitorSelected = false;
+						$homeSelected = false;
+						if( $editPicks )
+						{
+							$userPick = get_user_pick_by_game( $userId, $gameId['gameId'] )[0];
+							if( $userPick['winner'] == $game['VisitorID'] )
+								$visitorSelected = true;
+							if( $userPick['winner'] == $game['HomeID'] )
+								$homeSelected = true;
+						}
+			
+						echo '<table border="1">';
+						echo '<tr class="tableRowClear">';
+						if( $visitorSelected )
+							echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="visitor" checked="checked"></input></td>';
+						else
+							echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="visitor"></input></td>';
+						echo '<td><img src="' . $visitorIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+						if( $visitorRank == 0 )
+							echo '<td width="250"><a href="' . $visitorURL['URL'] . '">' . $visitorName['FullName'] . '</a></td>';
+						else
+							echo '<td width="250"><a href="' . $visitorURL['URL'] . '">#' . $visitorRank . ' ' . $visitorName['FullName'] . '</a></td>';
+						echo '<td align="center">' . $visitorRecord[0] . '-' . $visitorRecord[1] . '-' . $visitorRecord[2] . '</td>';
+						echo '</tr>';
+						echo '<tr class="tableHeader">';
+						if( $homeSelected )
+							echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="home" checked="checked"></input></td>';
+						else
+							echo '<td><input type="radio" name="game_' . $gameId['gameId'] . '" value="home"></input></td>';
+						echo '<td><img src="' . $homeIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+						if( $homeRank == 0 )
+							echo '<td width="250"><a href="' . $homeURL['URL'] . '">' . $homeName['FullName'] . '</a></td>';
+						else
+							echo '<td width="250"><a href="' . $homeURL['URL'] . '">#' . $homeRank . ' ' . $homeName['FullName'] . '</a></td>';
+						echo '<td align="center">' . $homeRecord[0] . '-' . $homeRecord[1] . '-' . $homeRecord[2] . '</td>';
+						echo '</tr>';
+						if( !empty( $odds ) )
+						{
+							echo '<tr class="tableRowClear">';
+							echo '<td />';
+							echo '<td />';
+							echo '<td width="250" align="right">' . $odds . '</td>';
+							echo '<td />';
+							echo '</tr>';
+						}
+						echo '</table>';	
+						if( $neutral )
+							echo '* Played at neutral location';
+						echo '</p>';
+					}
+				}
+			}
+			if( count( $upsetGames ) == 5 )
+			{
+				echo '</fieldset><br>';
+				echo '<fieldset><legend>Upset Games</legend>';
+				echo '<br />Highlighted team is the underdog.<br />';
+				foreach ( $upsetGames as $gameId ) 
+				{
+					$game = get_game_by_id( $gameId['gameId'] );
+					if( $game != NULL )
+					{
+						$game = $game[0];
+						$visitorName = get_team_name_by_id( $game['VisitorID'] )[0];
+						$visitorURL = get_team_url_by_id( $game['VisitorID'] )[0];
+						$homeName = get_team_name_by_id( $game['HomeID'] )[0];
+						$homeURL = get_team_url_by_id( $game['HomeID'] )[0];
+						$visitorRecord = get_team_record_by_id( $game['VisitorID'] )[0];
+						$homeRecord = get_team_record_by_id( $game['HomeID'] )[0];
+						$visitorRank = get_team_rank_by_week( $game['VisitorID'], $game['GameWeek'] );
+						$neutral = $game['NeutralSite'];
+						$odds = $game['Odds'];
+						if( count( $visitorRank ) != 0 )
+							$visitorRank = $visitorRank[0]['rank'];
+						else
+							$visitorRank = 0;
+						$homeRank = get_team_rank_by_week( $game['HomeID'], $game['GameWeek'] );
+						if( count( $homeRank ) != 0 )
+							$homeRank = $homeRank[0]['rank'];
+						else
+							$homeRank = 0;
+						$visitorIconURL = get_team_icon_url_by_id( $game['VisitorID'] )[0];
+						$homeIconURL = get_team_icon_url_by_id( $game['HomeID'] )[0];
+						$underdog = get_underdog_by_game( $gameId['gameId'] )[0];
+						$visitorBgColor = "tableEntryUnpicked";
+						$homeBgColor = "tableEntryUnpicked";
+						if( $underdog['underdog'] == $game['VisitorID'] )
+							$visitorBgColor = "tableEntryUnderdog";
+						else
+							$homeBgColor = "tableEntryUnderdog";
+
+						$gameSelected = false;
+						if( $editPicks )
+						{
+							$userPick = get_user_pick_by_game( $userId, $gameId['gameId'] );
+							if( count( $userPick ) != 0 )
+							{
+								$userPick = $userPick[0];
+								if( array_key_exists( 'winner', $userPick ) )
+									$gameSelected = true;
+							}
+						}
+		
+						echo '<table border="1">';
+						echo '<tr class="tableRowClear">';
+						if( $gameSelected )
+							echo '<td><input type="radio" name="upset" width="15" checked="checked" value="' . $gameId['gameId'] . '"></input></td>';
+						else
+							echo '<td><input type="radio" name="upset" width="15" value="' . $gameId['gameId'] . '"></input></td>';
+						echo '<td>';
+						echo '<table border="1"><tr>';
+						echo '<td><img src="' . $visitorIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+						if( $visitorRank == 0 )
+							echo '<td class="' . $visitorBgColor . '" width="250"><a href="' . $visitorURL['URL'] . '">' . $visitorName['FullName'] . '</a></td>';
+						else
+							echo '<td class="' . $visitorBgColor . '" width="250"><a href="' . $visitorURL['URL'] . '">#' . $visitorRank . ' ' . $visitorName['FullName'] . '</a></td>';
+						echo '<td align="center">' . $visitorRecord[0] . '-' . $visitorRecord[1] . '-' . $visitorRecord[2] . '</td>';
+						echo '</tr>';
+						echo '<tr class="tableRowClear">';
+						echo '<td><img src="' . $homeIconURL['IconURL'] . '" border="2" style="border:2px solid black;" width="25" /></td>';
+						if( $homeRank == 0 )
+							echo '<td class="' . $homeBgColor . '" width="250"><a href="' . $homeURL['URL'] . '">' . $homeName['FullName'] . '</a></td>';
+						else
+							echo '<td class="' . $homeBgColor . '" width="250"><a href="' . $homeURL['URL'] . '">#' . $homeRank . ' ' . $homeName['FullName'] . '</a></td>';
+						echo '<td align="center">' . $homeRecord[0] . '-' . $homeRecord[1] . '-' . $homeRecord[2] . '</td>';
+						echo '</tr>';
+						echo '</table>';
+						echo '</td>';
+						echo '</tr>';
+						echo '</table>';	
+						if( $neutral )
+							echo '* Played at neutral location';
+						echo '</p>';
+					}
+				}
+			}
+			echo '</fieldset><br>';
+			if( count( $standardGames ) != 0 || count( $gotwGames ) != 0 || count( $upsetGames ) == 5 )
+			{
+				if( $editPicks )
+					echo '<input type="submit" name="resubmit_picks" value="Resubmit"></input></form>';
+				else
+					echo '<input type="submit" name="submit_picks" value="Submit"></input></form>';
+			}
+//			else
+//					echo '<input type="submit" name="submit_picks" value="Submit"></input></form>';
+		
+	}
+	 require('include/footer.php'); 
+?>

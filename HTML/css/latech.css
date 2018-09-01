@@ -1,0 +1,73 @@
+body {
+	background: #ffffff url(../images/latech_background.png) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #E31B23;
+	color: #002F8B;
+}
+
+.footer {
+	background: #E31B23;
+	color: #002F8B;
+}
+
+.menu ul{
+background: #E31B23;
+color: #002F8B;
+}
+
+.menu li a{
+color:#002F8B;
+}
+
+.menu li a:hover{
+background: #002F8B;
+color: #E31B23;
+}
+
+.menu ul li:hover a{
+background:#002F8B;
+color:#E31B23;
+}
+
+.menu li ul{
+color: #002F8B;
+}
+
+.menu li:hover ul{
+color: #002F8B;
+}
+
+.menu li li {
+background:#E31B23;
+color: #002F8B;
+}
+
+.menu li:hover li a{
+background: #E31B23;
+color: #002F8B;
+}
+
+.menu li ul a{
+color: #002F8B;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+background: #002F8B;
+color: #E31B23;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #002F8B;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #E31B23;
+}
+

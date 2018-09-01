@@ -1,0 +1,73 @@
+body {
+	background: #000 url(../images/notre_dame_background.png) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #002b5c;
+	color: #b18d03;
+}
+
+.footer {
+	background: #002b5c;
+	color: #b18d03;
+}
+
+.menu ul{
+	background: #002b5c;
+	color: #b18d03;
+}
+
+.menu li a{
+	color:#b18d03;
+}
+
+.menu li a:hover{
+	background: #b18d03;
+	color: #002b5c;
+}
+
+.menu ul li:hover a{
+	background:#b18d03;
+	color:#002b5c;
+}
+
+.menu li ul{
+	color: #b18d03;
+}
+
+.menu li:hover ul{
+	color: #b18d03;
+}
+
+.menu li li {
+	background:#002b5c;
+	color: #b18d03;
+}
+
+.menu li:hover li a{
+	background: #002b5c;
+	color: #b18d03;
+}
+
+.menu li ul a{
+	color: #b18d03;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #b18d03;
+	color: #002b5c;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #002B5C;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #B18D03;
+}
+

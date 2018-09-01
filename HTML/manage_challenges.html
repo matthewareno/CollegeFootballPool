@@ -1,0 +1,141 @@
+<?php
+	require('include/header.php');
+//	error_reporting( E_ALL );
+//	ini_set( 'display_errors', 'on' );
+
+	if( empty( $_SESSION['user'] ) )
+	{
+		header( "Location: login.html" );
+		die( "Redirecting to login.html" );
+	}
+	$user = htmlentities( $_SESSION['user']['username'], ENT_QUOTES, 'UTF-8' );
+	if( is_user_an_admin( $user ) == false )
+	{
+		header( "Location: index.html" );
+		die( "Redirecting to index.html" );
+	}
+
+	if( $_SERVER["REQUEST_METHOD"] == "POST" )
+	{
+		$challenges = get_all_existing_challenges();
+
+		foreach( $challenges as $challenge )
+		{
+			$button_name = 'delete_challenge_' . $challenge['id'];
+			if( isset( $_POST[$button_name] ) )
+				delete_challenge( $challenge['id'] );
+		}
+		
+		if( array_key_exists( 'create_challenge', $_POST ) )
+		{
+			if( isset( $_POST['create_challenge'] ) )
+			{
+				$challenger1 = $_POST['selected_challenger1'];
+				$challenger2 = $_POST['selected_challenger2'];
+	
+				if( $challenger1 == $challenger2 )
+				{
+					echo 'CANNOT create challenge between the same person.<br />';
+				}
+				else
+				{
+					$challenger1_name = get_user_first_name_by_id( $challenger1 )[0];
+					$challenger2_name = get_user_first_name_by_id( $challenger2 )[0];
+		
+					add_challenge( $challenger1, $challenger2, $_POST['challenge_week'] );
+					echo 'Created challenge between ' . $challenger1_name['firstName'] . ' and ' . $challenger2_name['firstName'] . '.<br />';
+				}
+			}
+		}
+	}
+
+	$all_user_ids = get_all_user_ids();
+	$user_ids = array();
+	foreach( $all_user_ids as $user_id )
+	{
+		$user_ids[] = $user_id['id'];
+	}
+	
+	$all_challenger_ids = get_all_challenger_ids();
+	$challenger_ids = array();
+	foreach( $all_challenger_ids as $challenger_id )
+	{
+		$challenger_ids[] = $challenger_id['challenger1'];
+		$challenger_ids[] = $challenger_id['challenger2'];
+	}
+	
+//	$available_users = array_diff( $user_ids, $challenger_ids );
+	$available_users = $user_ids;
+	
+	echo '<p><b>Create Challenges:</b></p>';
+	echo '<form method="POST" action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">';
+	echo '<table border="1">';
+	echo '<tr bgcolor="#cccccc">';
+	echo '<td width="100" align="center"><b>Challenger 1</b></td>';
+	echo '<td width="20"></td>';
+	echo '<td width="100" align="center"><b>Challenger 2</b></td>';
+	echo '<td width="100" align="center"><b>Week</b></td>';
+	echo '<td width="100"></td>';
+	echo '</tr>';
+	echo '<tr><td width="100" align="center">';
+	echo '<select name="selected_challenger1">';
+	foreach( $available_users as $available_user )
+	{
+		$challenger = get_user_name_by_id( $available_user )[0];
+		echo '<option value="' . $available_user . '">' . $challenger['firstName'] . ' ' . $challenger['lastName'][0] . '.' . '</option>';
+	}
+	echo '</select></td>';
+	echo '<td width="20"></td>';
+	echo '<td width="100" align="center">';
+	echo '<select name="selected_challenger2">';
+	foreach( $available_users as $available_user )
+	{
+		$challenger = get_user_name_by_id( $available_user )[0];
+		echo '<option value="' . $available_user . '">' . $challenger['firstName'] . ' ' . $challenger['lastName'][0] . '.' . '</option>';
+	}
+	echo '</select></td>';
+	echo '<td width="100" align="center">';
+	echo '<select name="challenge_week">';
+	$weeks = range( 1, 16 );
+	foreach( $weeks as $week )
+		echo '<option value="' . $week . '">' . $week . '</option>';
+	echo '<option value="17">Bowls</option>';
+	echo '</select></td>';
+	echo '<td width="100" align="center"><input type="submit" name="create_challenge" value="Create"></input></td>';
+	echo '</tr></table></form>';
+
+	$latestChallengeWeek = get_latest_challenge_week();
+	for( $i = $latestChallengeWeek; $i > 0; $i-- )
+	{
+		echo '<p><b>Week ' . $i . ' Challenges:</b></p>';
+		$challenges = get_all_user_challenges_by_week( $i );
+		if( count( $challenges ) != 0 )
+		{
+			echo '<form method="post" action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '">';
+			echo '<table border="1">';
+			echo '<tr bgcolor="#cccccc">';
+			echo '<td width="300" align="left"><b>Challenger 1</b></td>';
+			echo '<td width="10" align="center"></td>';
+			echo '<td width="300" align="left"><b>Challenger 2</b></td>';
+			echo '</tr>';
+	
+			foreach( $challenges as $challenge )
+			{
+				$challenger1 = get_user_name_by_id( $challenge['challenger1'] )[0];
+				$challenger2 = get_user_name_by_id( $challenge['challenger2'] )[0];
+				echo '<tr>';
+				echo '<td width="300" align="center"><b>' . $challenger1['firstName'] . ' ' . $challenger1['lastName'][0] . '</b></td>';
+				echo '<td width="10" align="center">@</td>';
+				echo '<td width="300" align="center"><b>' . $challenger2['firstName'] . ' ' . $challenger2['lastName'][0] . '</b></td>';
+				echo '<td><input type="submit" name="delete_challenge_' . $challenge['id'] . '" value="Delete"></input></td>';
+			}
+			echo '</table></form><br />';
+		}
+		else
+		{
+			echo 'No existing challenges.<br />';
+		}
+	}
+
+	require('include/footer.php');
+?>

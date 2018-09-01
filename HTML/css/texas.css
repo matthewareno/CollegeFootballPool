@@ -1,0 +1,73 @@
+body {
+	background: #000 url(../images/texas_background.gif) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #BF5700;
+	color: #D6D2C4;
+}
+
+.footer {
+	background: #BF5700;
+	color: #D6D2C4;
+}
+
+.menu ul{
+	background: #BF5700;
+	color: #D6D2C4;
+}
+
+.menu li a{
+	color:#D6D2C4;
+}
+
+.menu li a:hover{
+	background: #D6D2C4;
+	color: #BF5700;
+}
+
+.menu ul li:hover a{
+	background:#D6D2C4;
+	color:#BF5700;
+}
+
+.menu li ul{
+	color: #D6D2C4;
+}
+
+.menu li:hover ul{
+	color: #D6D2C4;
+}
+
+.menu li li {
+	background:#BF5700;
+	color: #D6D2C4;
+}
+
+.menu li:hover li a{
+	background: #BF5700;
+	color: #D6D2C4;
+}
+
+.menu li ul a{
+	color: #D6D2C4;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #D6D2C4;
+	color: #BF5700;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #BF5700;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #D6D2C4;
+}
+

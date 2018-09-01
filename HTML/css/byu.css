@@ -1,0 +1,73 @@
+body {
+	background: #000 url(../images/byu_background.gif) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #001E4C;
+	color: #C5AF7D;
+}
+
+.footer {
+	background: #001E4C;
+	color: #C5AF7D;
+}
+
+.menu ul{
+	background: #001E4C;
+	color: #C5AF7D;
+}
+
+.menu li a{
+	color:#C5AF7D;
+}
+
+.menu li a:hover{
+	background: #C5AF7D;
+	color: #001E4C;
+}
+
+.menu ul li:hover a{
+	background:#C5AF7D;
+	color:#001E4C;
+}
+
+.menu li ul{
+	color: #C5AF7D;
+}
+
+.menu li:hover ul{
+	color: #C5AF7D;
+}
+
+.menu li li {
+	background:#001E4C;
+	color: #C5AF7D;
+}
+
+.menu li:hover li a{
+	background: #001E4C;
+	color: #C5AF7D;
+}
+
+.menu li ul a{
+	color: #A3A398;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #C5AF7D;
+	color: #001E4C;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #001E4C;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #C5AF7D;
+}
+

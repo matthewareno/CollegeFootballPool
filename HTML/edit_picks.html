@@ -1,0 +1,161 @@
+<?php
+//	error_reporting(E_ALL);
+//	ini_set('display_errors', 'on');
+
+	require( 'include/header.php' );
+	require( 'include/database_games.php' );
+	require( 'include/database_teams.php' );
+	require( 'include/database_rankings.php' );
+
+function get_game_week()
+{
+	if( array_key_exists( 'gameWeek', $_GET ) )
+		return $_GET['gameWeek'];
+	else
+		return 1;
+}
+
+function delete_existing_pick( $gameId )
+{
+
+}
+
+function display_picks_for_edit( $picks, $pickWeek, $isUpset )
+{
+	foreach( $picks as $pick )
+	{
+		$visitorId = get_game_away_team( $pick['gameId'] )[0]['VisitorID'];
+		$homeId = get_game_home_team( $pick['gameId'] )[0]['HomeID'];
+		$visitorName = get_team_name_by_id( $visitorId )[0]['FullName'];
+		$homeName = get_team_name_by_id( $homeId )[0]['FullName'];
+		$visitorRank = get_team_rank_by_week( $visitorId, $pickWeek );
+		if( count( $visitorRank ) == 0 )
+			$visitorRank = 0;
+		else
+			$visitorRank = $visitorRank[0]['rank'];
+		$homeRank = get_team_rank_by_week( $homeId, $pickWeek );
+		if( count( $homeRank ) == 0 )
+			$homeRank = 0;
+		else
+			$homeRank = $homeRank[0]['rank'];
+		$visitorBGColor = "tableEntryUnpicked";
+		$homeBGColor = "tableEntryUnpicked";
+
+		$pickType = get_pick_type_by_id( $pick['gameId'] )[0]['type'];
+		if( $pickType == 'upset' )
+		{
+			$underdog = get_underdog_by_game( $pick['gameId'] )[0]['underdog'];
+			if( $underdog == $visitorId )
+				$visitorBGColor = "tableEntryUnderdog";
+			else
+				$homeBGColor = "tableEntryUnderdog";
+		}
+
+		echo '<tr>';
+		if( $visitorRank == 0 )
+			echo '<td class="' . $visitorBGColor . '" width="250" align="left">' . $visitorName . '</td>';
+		else
+			echo '<td class="' . $visitorBGColor . '" width="250" align="left">#' . $visitorRank . ' ' . $visitorName . '</td>';
+		echo '<td width="10">@</td>';
+		if( $homeRank == 0 )
+			echo '<td class="' . $homeBGColor . '" width="250" align="left">' . $homeName . '</td>';
+		else
+			echo '<td class="' . $homeBGColor . '" width="250" align="left">#' . $homeRank . ' ' . $homeName . '</td>';
+		echo '<td width="50">';
+		echo '<form method=POST action="' . htmlspecialchars( $_SERVER["PHP_SELF"] ) . '?gameWeek=' . get_game_week() . '">';
+		echo '<input type="submit" name="delete_game' . $pick['gameId'] . '" value="Delete"></input>';
+		echo '</form>';
+		echo '</tr>';
+	}
+}
+?>
+
+<?php
+	if( $_SERVER["REQUEST_METHOD"] == "POST" )
+	{
+		if( array_key_exists( 'gameWeek', $_GET ) )
+			$gameWeek = $_GET['gameWeek'];
+		else
+			$gameWeek = $_POST['gameWeek'];
+		$standardGames = get_all_picks_by_week_and_type( $gameWeek, 'standard' );
+		$gotwGames = get_all_picks_by_week_and_type( $gameWeek, 'gotw' );
+		$upsetGames = get_all_picks_by_week_and_type( $gameWeek, 'upset' );
+
+		foreach( $standardGames as $game )
+		{
+			$buttonName = 'delete_game' . $game['gameId'];
+			if( isset( $_POST[$buttonName] ) )
+				delete_pick_by_id( $game['gameId'] );
+		}
+		foreach( $gotwGames as $game )
+		{
+			$buttonName = 'delete_game' . $game['gameId'];
+			if( isset( $_POST[$buttonName] ) )
+				delete_pick_by_id( $game['gameId'] );
+		}
+		foreach( $upsetGames as $game )
+		{
+			$buttonName = 'delete_game' . $game['gameId'];
+			if( isset( $_POST[$buttonName] ) )
+				delete_pick_by_id( $game['gameId'] );
+		}
+	}
+?>
+
+<fieldset><legend>Standard Games for Week <?php echo get_game_week(); ?></legend>
+<table border="1">
+	<tr bgcolor="#cccccc">
+		<td align="left" width="250">Visiting Team</td>
+		<td align="center" width="10"></td>
+		<td align="left" width="250">Home Team </td>
+		<td align="center" width="50"></td>
+	</tr>
+	<?php
+		$gameWeek = get_game_week();
+		$standardGames = get_all_picks_by_week_and_type( $gameWeek, 'standard' );
+		display_picks_for_edit( $standardGames, $gameWeek, 0 );
+	?>
+</table>
+</fieldset>
+<fieldset><legend>GOTW Games for Week <?php echo get_game_week(); ?></legend>
+<table border="1">
+	<tr bgcolor="#cccccc">
+		<td align="left" width="250">Visiting Team</td>
+		<td align="center" width="10"></td>
+		<td align="left" width="250">Home Team </td>
+		<td align="center" width="50"></td>
+	</tr>
+	<?php
+		$gameWeek = get_game_week();
+		$gotwGames = get_all_picks_by_week_and_type( $gameWeek, 'gotw' );
+		display_picks_for_edit( $gotwGames, $gameWeek, 0 );
+	?>
+</table>
+</fieldset>
+<fieldset><legend>Upset Games for Week <?php echo get_game_week(); ?></legend>
+
+<table border="1">
+	<tr bgcolor="#cccccc">
+		<td align="left" width="250">Visiting Team</td>
+		<td align="center" width="10"></td>
+		<td align="left" width="250">Home Team </td>
+		<td align="center" width="50"></td>
+	</tr>
+	<?php
+		$gameWeek = get_game_week();
+		$upsetGames = get_all_picks_by_week_and_type( $gameWeek, 'upset' );
+		display_picks_for_edit( $upsetGames, $gameWeek, 1 );
+	?>
+</table>
+</fieldset>
+
+<form method="get" action="create_picks.html">
+<?php echo '<input type="hidden" name="gameWeek" value="' . get_game_week() . '"></input>'; ?>
+<input type="submit" value="Back"></input>
+</form>
+
+<?php 
+	require( 'include/footer.php' );
+?>
+
+

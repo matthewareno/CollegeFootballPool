@@ -1,0 +1,69 @@
+body {
+	background: #FFFFFF url(../images/TexasAM.png) center top;
+	background-size: 256px 256px;
+	background-repeat: repeat;
+	color: #000;
+}
+
+.navbar {
+	background: #500000;
+	color: #DFDFDF;
+}
+
+.footer {
+	background: #500000;
+	color: #DFDFDF;
+}
+
+.menu ul{
+	background: #500000;
+	color: #DFDFDF;
+}
+
+.menu li a{
+	color:#DFDFDF;
+}
+
+.menu li a:hover{
+	background: #DFDFDF;
+	color: #500000;
+}
+
+.menu ul li:hover a{
+	background:#DFDFDF;
+	color:#500000;
+}
+
+.menu li ul{
+	color: #DFDFDF;
+}
+
+.menu li:hover ul{
+	color: #DFDFDF;
+}
+
+.menu li li {
+	background:#500000;
+	color: #DFDFDF;
+}
+
+.menu li:hover li a{
+	background: #500000;
+	color: #DFDFDF;
+}
+
+.menu li ul a:hover, .menu li ul li:hover a{
+	background: #DFDFDF;
+	color: #500000;
+}
+
+.gameContainer .game_status .left_field,
+.pickContainer .game_status .left_field {
+	background: #500000;
+}
+
+.gameContainer .game_status .right_field,
+.pickContainer .game_status .right_field {
+	background: #DFDFDF;
+}
+
